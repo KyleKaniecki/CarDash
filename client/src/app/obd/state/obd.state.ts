@@ -15,12 +15,15 @@ import {
     FuelLevel,
     EthanolPercentage,
     OilTemp,
-    FuelInjectionTiming
+    FuelInjectionTiming,
+    AmbiantAirTemp,
+    FuelType,
+    IntakeTemp
 } from './../models/obd.models';
 import { State, Action, StateContext } from '@ngxs/store';
 import { UpdateObdState } from '../actions/obd.actions';
 import { ObdService } from '../services/obd.service';
-import { tap } from 'rxjs/operators';
+import { tap, map, max } from 'rxjs/operators';
 
 export interface ObdStateModel {
     fuelStatus: FuelStatus;
@@ -31,92 +34,142 @@ export interface ObdStateModel {
     rpm: Rpm;
     speed: Speed;
     timingAdvance: TimingAdvance;
-    intakeTemp: IntakePressure;
-    massAirflowRate: MassAirflowRate;
-    throttlePosition: ThrottlePosition;
+    intakeTemp: IntakeTemp;
+    maf: MassAirflowRate;
+    throttlePos: ThrottlePosition;
     runTime: RunTime;
-    fuelRailPressureVacuum: FuelRailPressureVacuum;
+    fuelRailPressureVac: FuelRailPressureVacuum;
     fuelRailPressureDirect: FuelRailPressureDirect;
     fuelLevel: FuelLevel;
-    ethanolPercentage: EthanolPercentage;
+    fuelType: FuelType;
+    ethanolPercent: EthanolPercentage;
     oilTemp: OilTemp;
-    fuelInjectionTiming: FuelInjectionTiming;
+    fuelInjectTiming: FuelInjectionTiming;
+    ambiantAirTemp: AmbiantAirTemp;
 }
 
 @State<ObdStateModel>({
     name: 'obd',
     defaults: {
         fuelStatus: {
-            value: '',
-            unit: 'none'
+            value: null,
+            unit: 'none',
+            max: 0,
+            min: 0
         },
         engineLoad: {
-            value: 0,
-            unit: 'percent'
+            value: null,
+            unit: 'percent',
+            max: 1,
+            min: 0
         },
         coolantTemp: {
-            value: 0,
-            unit: 'celsius'
+            value: null,
+            unit: 'celsius',
+            max: 140,
+            min: 0
         },
         fuelPressure: {
-            value: 0,
-            unit: 'kilopascal'
+            value: null,
+            unit: 'kilopascal',
+            max: 80,
+            min: 0
         },
         intakePressure: {
-            value: 0,
-            unit: 'kilopascal'
+            value: null,
+            unit: 'kilopascal',
+            max: 15,
+            min: 0
         },
         rpm: {
-            value: 0,
-            unit: 'rpm'
+            value: null,
+            unit: 'rpm',
+            max: 10000,
+            min: 0
         },
         speed: {
-            value: 0,
-            unit: 'kph'
+            value: null,
+            unit: 'kph',
+            max: 210,
+            min: 0
         },
         timingAdvance: {
-            value: 0,
-            unit: 'degrees'
+            value: null,
+            unit: 'degrees',
+            max: 360,
+            min: 0
         },
         intakeTemp: {
-            value: 0,
-            unit: 'kilopascal'
+            value: null,
+            unit: 'celsius',
+            max: 120,
+            min: -40
         },
-        massAirflowRate: {
-            value: 0,
-            unit: 'gps'
+        maf: {
+            value: null,
+            unit: 'gps',
+            max: 10000,
+            min: 0
         },
-        throttlePosition: {
-            value: 0,
-            unit: 'percent'
+        throttlePos: {
+            value: null,
+            unit: 'percent',
+            max: 1,
+            min: 0
         },
         runTime: {
-            value: 0,
-            unit: 'seconds'
+            value: null,
+            unit: 'seconds',
+            max: 0,
+            min: 0
         },
-        fuelRailPressureVacuum: {
-            value: 0,
-            unit: 'kilopascal'
+        fuelRailPressureVac: {
+            value: null,
+            unit: 'kilopascal',
+            max: 552,
+            min: 0
         },
         fuelRailPressureDirect: {
-            value: 0,
-            unit: 'kilopascal'
+            value: null,
+            unit: 'kilopascal',
+            max: 552,
+            min: 0
         },
         fuelLevel: {
-            value: 0,
-            unit: 'percent'
+            value: null,
+            unit: 'percent',
+            max: 1,
+            min: 0
         },
-        ethanolPercentage: {
-            value: 0,
-            unit: 'percent'
+        fuelType: {
+            value: null,
+            unit: 'none',
+            max: 0,
+            min: 0
+        },
+        ethanolPercent: {
+            value: null,
+            unit: 'percent',
+            max: 1,
+            min: 0
         },
         oilTemp: {
-            value: 0,
-            unit: 'celsius'
+            value: null,
+            unit: 'celsius',
+            max: 135,
+            min: 0
         },
-        fuelInjectionTiming: {
-            value: 0,
-            unit: 'degrees'
+        fuelInjectTiming: {
+            value: null,
+            unit: 'degrees',
+            max: 360,
+            min: 0
+        },
+        ambiantAirTemp: {
+            value: null,
+            unit: 'celsius',
+            max: 120,
+            min: 0
         }
     }
 })
@@ -127,7 +180,34 @@ export class ObdState {
     updateObdState(ctx: StateContext<ObdStateModel>) {
         return this.obdService.getLatestData()
             .pipe(
+                map(this.lowercaseKeys),
+                map(this.convertSnakeToCamel),
+                map((result) => {
+                    const config = ctx.getState();
+                    for (const key of Object.keys(result)) {
+                        if (key in config) {
+                            result[key] = Object.assign(config[key], {value: result[key]});
+                        }
+                    }
+                    return result;
+                }),
                 tap((result) => ctx.patchState(result))
             );
+    }
+
+    private lowercaseKeys(obj: any): any {
+        const config = {};
+        for (const key of Object.keys(obj)) {
+            config[key.toLowerCase()] = obj[key];
+        }
+        return config;
+    }
+
+    private convertSnakeToCamel(obj: any): any {
+        const config = {};
+        for (const key of Object.keys(obj)) {
+            config[key.replace(/(\_\w)/g, m => m[1].toUpperCase())] = obj[key];
+        }
+        return config;
     }
 }

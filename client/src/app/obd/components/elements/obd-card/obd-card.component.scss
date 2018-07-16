@@ -1,0 +1,27 @@
+.obd-container {
+    height: 95%;
+    width: 95%;
+    margin: 5px;
+    box-shadow: 3px 3px 10px darkgray;
+
+    .header {
+        height: 20%;
+    }
+
+    .body {
+        height: 80%;
+        position: relative;
+
+        .text-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            left: 25%;
+            top: 25%;
+            height: 50%;
+            width: 50%
+        }
+    }
+}

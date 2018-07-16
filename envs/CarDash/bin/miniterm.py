@@ -1,4 +1,4 @@
-#!/home/tabledwler/External/Development/CarDash/envs/CarDash/bin/python3
+#!/Users/tabledwler/Development/CarDash/envs/CarDash/bin/python3.7
 #
 # Very simple serial terminal
 #

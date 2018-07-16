@@ -36,7 +36,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/tabledwler/External/Development/CarDash/envs/CarDash"
+set -gx VIRTUAL_ENV "/Users/tabledwler/Development/CarDash/envs/CarDash"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

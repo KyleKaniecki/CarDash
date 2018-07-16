@@ -1,5 +1,5 @@
 from .databasemanager import DatabaseManager
-import obd
+# import obd
 import time
 import json
 

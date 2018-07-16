@@ -1,1 +1,19 @@
 /* You can add global styles to this file, and also import other style files */
+
+@import '~@angular/material/prebuilt-themes/deeppurple-amber.css';
+
+@font-face {
+    font-family: "Custom";
+    font-size: 20;
+    font-weight: 100;
+    src: url("assets/fonts/Russo_One/RussoOne-Regular.ttf");
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body > * {
+    font-family: 'Custom';
+}

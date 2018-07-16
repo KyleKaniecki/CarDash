@@ -1,0 +1,9 @@
+<mat-sidenav-container class="side-nav-container">
+  <mat-sidenav #sidenav mode="side" [opened]="(opened | async)" class="side-nav-drawer">
+      <button mat-stroked-button color="primary" (click)="goToLink(['/'])" class="side-nav-button">Home</button>
+    <button mat-stroked-button color="primary" (click)="goToLink(['/obd'])" class="side-nav-button">OBD</button>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <ng-content></ng-content>
+  </mat-sidenav-content>
+</mat-sidenav-container>
